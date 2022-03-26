@@ -8,10 +8,11 @@ object JoinLine extends StateCommand {
     val lines = State.properSplit(state.content)
     val line = lines(state.position.line)
     if (state.position.line != lines.length - 1) {
-      val newLine = line + " " + lines(state.position.line + 1)
-      val position = State.Position(state.position.line, line.length)
+      val newLine = line.substring(0, line.length- 1) + " " + lines(state.position.line + 1)
+      val position = State.Position(state.position.line, line.length - 1)
       var newLines = lines.updated(state.position.line, newLine)
       newLines = newLines.filter(x => newLines.indexOf(x) != state.position.line + 1)
+      println(newLines)
       val content = newLines.mkString("\n")
       new State(content, position, state.selection, true)
     }
