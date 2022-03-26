@@ -33,6 +33,26 @@ case class State(content: String,
                  mode: Boolean)
     extends StateFields {
   val contentLines = State.properSplit(content)
+
+  def isPositionAtEndOfLine(): Boolean = {
+    State.isEndOfLine(content, position)
+  }
+
+  def isPositionAtStartOfLine(): Boolean = {
+    State.isStartOfLine(content, position)
+  }
+
+  def isPositionAtEndOfText(): Boolean = {
+    State.isEndOfText(content, position)
+  }
+
+  def isPositionOnLastLine(): Boolean = {
+    State.isOnLastLine(content, position)
+  }
+
+  def isPositionOnFirstLine(): Boolean = {
+    State.isOnFirstLine(content, position)
+  }
 }
 
 object State {
@@ -55,6 +75,55 @@ object State {
     val position = positions.headOption.getOrElse(Position(0, 0))
 
     State(content, position, None, mode)
+  }
+
+  def isValidPosition(content: String, position: Position): Boolean = {
+    val lines = properSplit(content);
+    position.line < lines.length && position.character < lines(position.line).length
+  }
+
+  def isEndOfLine(content: String, position: Position): Boolean = {
+    val lines = properSplit(content);
+    position.line < lines.length && position.character == lines(position.line).length - 1
+  }
+
+  def isStartOfLine(content: String, position: Position): Boolean = {
+    val lines = properSplit(content);
+    position.character == 0
+  }
+
+  def isEndOfText(content: String, position: Position): Boolean = {
+    val lines = properSplit(content);
+    position.line == lines.length -1 && position.character == lines(position.line).length -1
+  }
+
+  def isStartOfText(content: String, position: Position): Boolean = {
+    position.line == 0 && position.character == 0
+  }
+
+  def isOnFirstLine(content: String, position: Position): Boolean = {
+    position.line == 0
+  }
+
+  def isOnLastLine(content: String, position: Position): Boolean = {
+    val lines = properSplit(content);
+    position.line == lines.length -1
+  }
+
+  def getPositionAfter(content: String, position: Position): Option[Position] = {
+    if (!isEndOfText(content, position)) {
+      if (isEndOfLine(content,position)) Some(Position(position.line + 1 , 0))
+      else Some(position.copy(character = position.character + 1))
+    } else None
+  }
+
+  def getPositionBefore(content: String, position: Position): Option[Position] = {
+    val lines = properSplit(content);
+    val startOfLine = isStartOfLine(content, position);
+    if (!isStartOfText(content,position)) {
+      if (startOfLine) Some(Position(position.line - 1 , lines(position.line - 1).length -1))
+      else Some(position.copy(character = position.character - 1))
+    } else None
   }
 
   /**
