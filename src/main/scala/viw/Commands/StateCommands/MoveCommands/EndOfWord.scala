@@ -2,17 +2,22 @@ package viw.Commands.StateCommands.MoveCommands
 
 import viw.internals.State
 
+import scala.annotation.tailrec
+
 object EndOfWord extends MoveCommand {
 
   override def getNewPosition(state: State): State.Position = {
-    val lines = State.properSplit(state.content)
-    val line = lines(state.position.line)
-    if (line(state.position.character).equals(' ')) return state.position
-    for (i <- state.position.character to line.length - 1){
-      if (line(i).equals(' ')) {
-        return State.Position(state.position.line, i - 1)
-      }
-    }
-    State.Position(state.position.line, line.length - 1)
+    val line = state.contentLines(state.position.line)
+    state.position.copy(character = getFirstIndexNextWord(line.substring(state.position.character), state.position.character))
   }
+
+  @tailrec
+  private def getFirstIndexNextWord(line: String, count: Int): Int = {
+    (line.head, line.tail) match {
+      case (_, tail) if tail.head == ' ' => count
+      case (head, tail) if tail.length == 1 => count + 1
+      case (_, tail) => getFirstIndexNextWord(tail, count + 1)
+    }
+  }
+
 }

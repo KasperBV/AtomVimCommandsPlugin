@@ -4,7 +4,6 @@ import viw.internals.State
 
 class Find(val key: String) extends MoveCommand {
 
-
   override def getNewPosition(state: State): State.Position = {
     val lines = State.properSplit(state.content)
     val line = lines(state.position.line)

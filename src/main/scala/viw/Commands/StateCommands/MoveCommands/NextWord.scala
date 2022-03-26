@@ -2,30 +2,27 @@ package viw.Commands.StateCommands.MoveCommands
 
 import viw.internals.State
 
+import scala.annotation.tailrec
+
 object NextWord extends MoveCommand {
 
-
   override def getNewPosition(state: State): State.Position = {
-    val lines = State.properSplit(state.content)
-    val line = lines(state.position.line)
-    var character = line.length - 1
-    var i = state.position.character
-    var notFound = true
-    while ((i != line.length - 1) && notFound){
-      if (line(i).equals(' ')) {
-        while (i != line.length - 1 && line(i).equals(' ')) {
-          i += 1
-        }
-        notFound = false
-        character = i
-      }
-      i += 1
+    val line = state.contentLines(state.position.line)
+
+    getFirstIndexNextWord(line.substring(state.position.character), state.position.character) match {
+      case None => if (state.isPositionOnLastLine()) state.position
+      else state.position.copy(line = state.position.line + 1, character = 0)
+      case Some(i) => state.position.copy(character = i)
     }
-    val position = if(character != line.length - 1)
-      State.Position(state.position.line, character) else
-      if(state.position.line != lines.length - 1)
-        State.Position(state.position.line + 1, 0) else
-        state.position
-    position
   }
+
+  @tailrec
+  private def getFirstIndexNextWord(line: String, count: Int): Option[Int] = {
+    (line.head, line.tail) match {
+      case (_, "") => None
+      case (' ', tail) if tail.head != ' ' => Some(count + 1)
+      case (_, tail) => getFirstIndexNextWord(tail, count + 1)
+    }
+  }
+
 }

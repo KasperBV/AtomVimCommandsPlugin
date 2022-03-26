@@ -4,12 +4,12 @@ import viw.internals.State
 
 object Down extends MoveCommand {
 
-
   override def getNewPosition(state: State): State.Position = {
-    val lines = State.properSplit(state.content)
-    val position = if (state.position.line != lines.length - 1)
-      State.Position(state.position.line + 1, state.position.character) else
-      state.position
-    position
+    if (state.isPositionOnLastLine()) state.position
+    else {
+      val lineLength = state.contentLines(state.position.line + 1).length
+      State.Position(state.position.line + 1, Math.min(lineLength, state.position.character))
+    }
   }
+
 }

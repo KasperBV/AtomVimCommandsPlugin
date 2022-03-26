@@ -12,7 +12,6 @@ object JoinLine extends StateCommand {
       val position = State.Position(state.position.line, line.length - 1)
       var newLines = lines.updated(state.position.line, newLine)
       newLines = newLines.filter(x => newLines.indexOf(x) != state.position.line + 1)
-      println(newLines)
       val content = newLines.mkString("\n")
       new State(content, position, state.selection, true)
     }

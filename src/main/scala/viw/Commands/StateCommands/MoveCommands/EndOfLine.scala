@@ -9,4 +9,5 @@ object EndOfLine extends MoveCommand {
     val line = lines(state.position.line)
     State.Position(state.position.line,line.length - 1)
   }
+
 }
