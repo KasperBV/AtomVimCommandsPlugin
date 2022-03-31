@@ -27,7 +27,7 @@ object MatchBracket extends MoveCommand {
   @tailrec
   private def matchBracketForward(state: State, position: State.Position, bracketDepth: Int,
                                   openBracket: Char, closeBracket: Char): State.Position ={
-    State.getPositionAfter(state.content, position) match {
+    State.getPositionAfter(state.contentLines, position) match {
       case Some(p) => state.contentLines(p.line)(p.character) match {
                       case `closeBracket` => if (bracketDepth == 1) p
                                            else matchBracketForward(state, p, bracketDepth - 1, openBracket, closeBracket)
@@ -38,9 +38,10 @@ object MatchBracket extends MoveCommand {
     }
   }
 
+  @tailrec
   private def matchBracketBackward(state: State, position: State.Position, bracketDepth: Int,
                                    openBracket: Char, closeBracket: Char): State.Position ={
-    State.getPositionBefore(state.content, position) match {
+    State.getPositionBefore(state.contentLines, position) match {
       case Some(p) => state.contentLines(p.line)(p.character) match {
         case `openBracket` => if (bracketDepth == 1) p
                               else matchBracketBackward(state, p, bracketDepth - 1, openBracket, closeBracket)

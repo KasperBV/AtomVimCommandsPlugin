@@ -73,7 +73,7 @@ trait ViwTest extends Assertions {
       Viw.processKey(char.toString, state).getOrElse(state)
     }
 
-    assert(endState.cursoredText === expected.text)
+    assert(endState.cursoredText === expected.text.replaceAll("\r", ""))
     assert(endState.mode === expected.mode)
   }
 

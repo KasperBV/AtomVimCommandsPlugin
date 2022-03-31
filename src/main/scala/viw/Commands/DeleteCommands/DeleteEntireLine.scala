@@ -7,7 +7,7 @@ import viw.internals.State
 object DeleteEntireLine extends DeleteCommand {
 
   override def process(state: State, eState: EditorState): (State, EditorState) = {
-    val lines = State.properSplit(state.content)
+    val lines = state.contentLines
     (process(state), EditorState(eState.lastCommand, eState.viewMode, eState.bindings, lines(state.position.line)))
   }
 
