@@ -10,7 +10,8 @@ class ChainCommand(com1: Command, com2: Command) extends Command {
   val command2: Command = com2
 
   override def process(state: State, eState: EditorState): (State, EditorState) = {
-    command2.process(command1.process(state, eState)._1, command1.process(state, eState)._2)
+    val partiallyProcessedState = command1.process(state, eState)
+    command2.process(partiallyProcessedState._1, partiallyProcessedState._2)
   }
 
   override def equals(x: Any): Boolean = {

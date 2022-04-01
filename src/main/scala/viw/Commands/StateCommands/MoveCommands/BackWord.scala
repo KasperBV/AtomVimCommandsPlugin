@@ -8,7 +8,7 @@ import scala.annotation.tailrec
 object BackWord extends MoveCommand {
 
   override def getNewPosition(state: State): State.Position = {
-    val lines = State.properSplit(state.content)
+    val lines = state.contentLines
     val line = lines(state.position.line)
 
     if (state.isPositionAtStartOfLine())

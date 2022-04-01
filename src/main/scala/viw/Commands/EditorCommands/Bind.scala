@@ -7,11 +7,11 @@ class Bind(k: Char) extends EditorCommand {
   val key: Char = k
 
   override def process(eState: EditorState): EditorState = {
-    val bindings = key match {
+    val newBindings = key match {
       case 'd'=> Map[Char, Command]()
       case _ => eState.bindings + (key -> eState.lastCommand.get)
     }
-    new EditorState(eState.lastCommand, eState.viewMode, bindings, eState.copyBuffer)
+    eState.copy(bindings = newBindings)
   }
 
   override def equals(x: Any): Boolean ={

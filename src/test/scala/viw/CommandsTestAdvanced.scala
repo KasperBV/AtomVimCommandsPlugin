@@ -312,6 +312,18 @@ class CommandsTestAdvanced extends FunSuite with ViwTest with BeforeAndAfter {
     )
   }
 
+  test("Delete line lastLine") {
+    viwTrue(
+      "D",
+      """Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        |Cras quis massa eu ex commodo imperdiet.
+        |#C#urabitur auctor tellus at justo malesuada, at ornare mi tincidunt.""".stripMargin,
+      """Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        |#C#ras quis massa eu ex commodo imperdiet.""".stripMargin,
+    )
+  }
+
+
 
   test("Delete line only line") {
     viwTrue(

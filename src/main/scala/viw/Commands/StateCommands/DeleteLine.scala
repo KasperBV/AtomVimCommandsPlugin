@@ -4,30 +4,46 @@ import viw.internals.State
 
 object DeleteLine extends StateCommand {
 
+
+
   override def process(state: State): State = {
-    val lines = State.properSplit(state.content)
-    val line = lines(state.position.line)
-    val newLine = line.substring(0, state.position.character)
-    var newLines = lines
-    var position = state.position
-    if (newLine.length != 0){
-      newLines = lines.updated(state.position.line,newLine)
-      position = State.Position(state.position.line , state.position.character - 1)
-    }
-    else{
-      if (state.position.line != lines.length -1) {
-        newLines = lines.slice(0, state.position.line) ++ lines.slice(state.position.line + 1, lines.length)
-        position = state.position
-      }
-      else {
-        newLines =  if (lines.length != 1)
-          lines.slice(0, state.position.line) else lines.updated(0, "")
-        position = if (lines.length != 1)
-          State.Position(state.position.line - 1, state.position.character) else state.position
-      }
-    }
-    val content = newLines.mkString("\n")
-    val rState = new State(content, position, state.selection, true)
-    rState
+    if (state.isPositionAtStartOfLine()) cutOutLine(state)
+    else cutLineAtCurrentPosition(state)
   }
+
+  def cutOutLine(state: State): State = {
+    val lines = state.contentLines
+    if (state.isPositionOnLastLine()) {
+      state.copy(content = dropLastLine(lines).mkString("\n"), position = State.Position(Math.max(0, lines.length - 2), 0))
+    } else {
+      state.copy(content = dropLine(lines, state.position.line).mkString("\n"), position = State.Position(state.position.line, 0))
+    }
+  }
+
+  def dropLastLine(lines: Vector[String]): Vector[String] ={
+    if (lines.length != 1) lines.slice(0, lines.length - 1)
+    else lines.updated(0, "")
+  }
+
+  def dropLine(lines: Vector[String], lineIndex: Int): Vector[String] ={
+    lines.slice(0, lineIndex) ++ lines.slice(lineIndex + 1, lines.length)
+  }
+
+  def cutLineAtCurrentPosition(state: State): State = {
+    val lines = state.contentLines
+    if (state.isPositionAtEndOfLine()) state
+    else {
+      state.copy(
+        content = trimLine(lines, state.position.line, state.position.character).mkString("\n"),
+        position = state.position.copy(character = state.position.character - 1)
+      )
+    }
+  }
+
+  def trimLine(lines: Vector[String], lineIndex: Int, characterIndex: Int): Vector[String] ={
+    val newLine = lines(lineIndex).substring(0, characterIndex)
+    lines.updated(lineIndex,newLine)
+  }
+
+
 }

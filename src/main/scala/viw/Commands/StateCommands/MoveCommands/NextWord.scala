@@ -18,10 +18,10 @@ object NextWord extends MoveCommand {
 
   @tailrec
   private def getFirstIndexNextWord(line: String, count: Int): Option[Int] = {
-    (line.head, line.tail) match {
-      case (_, "") => None
-      case (' ', tail) if tail.head != ' ' => Some(count + 1)
-      case (_, tail) => getFirstIndexNextWord(tail, count + 1)
+    line match {
+      case line if line.length == 1 => None
+      case line if line.head == ' ' && line.tail.head != ' ' => Some(count + 1)
+      case _ => getFirstIndexNextWord(line.tail, count + 1)
     }
   }
 

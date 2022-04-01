@@ -6,14 +6,13 @@ import viw.internals.State
 object Delete extends StateCommand {
 
   override def process(state: State): State = {
-    val lines = State.properSplit(state.content)
+    val lines = state.contentLines
     val line = lines(state.position.line)
     val newLine = line.substring(0, state.position.character) + line.substring(state.position.character + 1)
     val newLines = lines.updated(state.position.line,newLine)
-    val content = newLines.mkString("\n")
-    val rState = if (line.length - 1 == state.position.character)
-      Left.process(new State(content, state.position, state.selection, true)) else
-      new State(content, state.position, state.selection, true)
-    rState
+    val newContent = newLines.mkString("\n")
+    if (line.length - 1 == state.position.character)
+      state.copy(content = newContent, position = state.position.copy(character = state.position.character - 1))
+    else state.copy(content = newContent)
   }
 }
