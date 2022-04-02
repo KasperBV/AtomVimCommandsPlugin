@@ -9,7 +9,6 @@ import viw.Commands._
 
 object CommandFactory {
 
-
   // Returns the command associated with the given input buffer and lastCommand.
   // If the inputBuffer is incomplete (not all keys for the command given yet) the result will be None.
   // If the inputBuffer has no command associated the result will be the NotBound Command.
@@ -23,7 +22,7 @@ object CommandFactory {
     if (eState.viewMode) produceSelectionCommand(inputBuffer, editorState)
 
     else if (inputBuffer.length == 1) {
-      inputBuffer(0) match {
+      inputBuffer.head match {
         case "h" => Some(Left)
         case "j" => Some(Down)
         case "k" => Some(Up)
@@ -48,14 +47,14 @@ object CommandFactory {
         case "A" => Some(InsertAfterLine)
         case "C" => Some(ChangeLine)
         case "p" => Some(new Paste(eState.copyBuffer))
-        case "P" =>   Some(new PasteBehind(eState.copyBuffer))
+        case "P" => Some(new PasteBehind(eState.copyBuffer))
         case "." => editorState.lastCommand
-        case _ => eState.bindings get inputBuffer(0)(0)
+        case head => eState.bindings get head(0)
       }
     }
 
     else {
-      inputBuffer(0) match {
+      inputBuffer.head match {
         case "d" => produceDeleteCommand(inputBuffer.tail, editorState)
         case "c" => produceChangeCommand(inputBuffer.tail, editorState)
         case "f" => Some(new Find(inputBuffer(1)))
@@ -64,10 +63,19 @@ object CommandFactory {
         case "B" => Some(new Bind(inputBuffer(1)(0)))
         case "z" => produceChainCommand(inputBuffer.tail, editorState)
         case "y" => produceYankCommand(inputBuffer.tail, editorState)
-        case _ => if (inputBuffer(0)(0).isDigit) produceCountCommand(inputBuffer.tail, inputBuffer(0), editorState) else  Some(NotBound)
+        case head => if (head(0).isDigit) produceCountCommand(inputBuffer.tail, head, editorState) else  Some(NotBound)
       }
     }
+  }
 
+  private def produceSelectionCommand(inputBuffer: Vector[String], eState: EditorState): Option[Command] = {
+    produceCommand(inputBuffer, EditorState(eState.lastCommand, false, eState.bindings, eState.copyBuffer)) match {
+      case None => None
+      case Some(c) => c match {
+        case m: MoveCommand => Some(new Selection(m))
+        case _ => Some(NotBound)
+      }
+    }
   }
 
   private def produceDeleteCommand(nextInput: Vector[String], editorState: EditorState): Option[Command] = {
@@ -149,16 +157,6 @@ object CommandFactory {
     nextCommand match {
       case None => None
       case Some(i) => Some(new ChainCommand(i, editorState.lastCommand.get))
-    }
-  }
-
-  private def produceSelectionCommand(inputBuffer: Vector[String], eState: EditorState): Option[Command] = {
-    produceCommand(inputBuffer, EditorState(eState.lastCommand, false, eState.bindings, eState.copyBuffer)) match {
-      case None => None
-      case Some(c) => c match {
-        case m: MoveCommand => Some(new Selection(m))
-        case _ => Some(NotBound)
-      }
     }
   }
 
