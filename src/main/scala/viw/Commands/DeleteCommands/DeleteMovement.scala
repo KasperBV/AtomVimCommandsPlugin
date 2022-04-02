@@ -14,64 +14,55 @@ class DeleteMovement(move: MoveCommand) extends DeleteCommand {
 
   override def process(state: State, eState: EditorState): (State, EditorState) = (process(state), new YankMovement(movement).process(state, eState)._2)
 
+
+
   def process(state: State): State = {
     val movedState = movement.process(state)
-    var rState = state
-    if (state.position.equals(movedState.position)){
-      state
-    }
-    else if (state.position.line == movedState.position.line) {
-      deleteBetween(state, movedState.position.character,state.position.character)
-    }
+    if (state.position.equals(movedState.position)) state
+    else deleteToNewPosition(state, movedState.position)
+  }
+
+  def deleteToNewPosition(state: State, newPosition: Position): State = {
+    if (state.position.line == newPosition.line) deleteOnSingleLine(state, newPosition)
     else {
-      if (math.abs(state.position.line - movedState.position.line) > 1)
-        rState = deleteLinesBetween(state, math.max(state.position.line, movedState.position.line) - 1, math.min(state.position.line, movedState.position.line) + 1)
-        rState = deleteBetweenLines(rState, movedState.position, state.position)
-        rState
+      val stateWithoutInnerLines = deleteLinesBetween(state, math.max(state.position.line, newPosition.line) - 1,
+        math.min(state.position.line, newPosition.line) + 1)
+      deleteBetweenLines(stateWithoutInnerLines, newPosition, state.position)
     }
   }
 
-  private def deleteBetween(state: State, end: Int, start: Int): State = {
-    val lines = State.properSplit(state.content)
-    val line = lines(state.position.line)
-    var newLine = line
-    var position = state.position
-    if (start < end){
-      newLine = line.substring(0, start) + line.substring(end)
-      position = State.Position(state.position.line, start)
-    }
-    else {
-      newLine = line.substring(0, end+1) + line.substring(start+1)
-      position = State.Position(state.position.line, end)
-    }
-    val newLines = lines.updated(state.position.line,newLine)
-    val content = newLines.mkString("\n")
+  private def deleteOnSingleLine(state: State, newPosition: Position): State = {
+    val newLine = deleteOnLineBetween(state.contentLines(state.position.line),
+      state.position.character, newPosition.character)
+    val newLines = state.contentLines.updated(state.position.line, newLine)
+    state.copy(newLines.mkString("\n"),
+        state.position.copy(character = math.min(newPosition.character, state.position.character))
+    )
+  }
 
-    val rState = new State(content, position, state.selection, true)
-    rState
+  private def deleteOnLineBetween(line: String, first: Int, second: Int): String = {
+    if (first > second)
+      line.substring(0, second + 1) + line.substring(first + 1)
+    else
+      line.substring(0, first) + line.substring(second)
+
+  }
+
+  private def deleteLinesBetween(state: State, end: Int, start: Int): State = {
+    var rState = new State(state.content, State.Position(start, 0), state.selection, true )
+    for (i <- start to end){
+      rState = DeleteLine.process(rState)
+    }
+    state.copy(content = rState.content)
   }
 
   private def deleteBetweenLines(state: State, end: Position, start: Position): State ={
-
     if (start.line < end.line) {
       val rState = DeleteLine.process(state)
-      val lines = State.properSplit(rState.content)
-      var newLines = lines
-      var position = state.position
-      if (state.position.character != 0) {
-        val line = lines(start.line + 1)
-        val newLine = line.substring(end.character)
-        newLines = lines.updated(state.position.line + 1, newLine)
-        position = State.Position(start.line + 1, 0)
-      }
-      else {
-        val line = lines(start.line)
-        val newLine = line.substring(end.character)
-        newLines = lines.updated(state.position.line, newLine)
-        position = State.Position(start.line, 0)
-      }
-      val content = newLines.mkString("\n")
-      new State(content, position, state.selection, true)
+      val lines = rState.contentLines
+      val newLine = lines(rState.position.line).substring(end.character)
+      val newLines = lines.updated(rState.position.line, newLine)
+      State(newLines.mkString("\n"), State.Position(rState.position.line, 0), state.selection, true)
     }
 
     else{
@@ -83,8 +74,7 @@ class DeleteMovement(move: MoveCommand) extends DeleteCommand {
       val newLine2 = if (start.character != line2.length - 1)
         line2.substring(start.character + 1) else
         ""
-      newLines = lines.updated(end.line, newLine)
-      newLines = newLines.updated(end.line + 1, newLine2)
+      newLines = lines.updated(end.line, newLine).updated(end.line + 1, newLine2)
       val content = newLines.mkString("\n")
       if (newLine2 == ""){
         val rState = DeleteEntireLine.process(new State(content, State.Position(end.line + 1 ,0), state.selection, true))
@@ -92,14 +82,6 @@ class DeleteMovement(move: MoveCommand) extends DeleteCommand {
       }
       else new State(content, end, state.selection, true)
     }
-  }
-
-  private def deleteLinesBetween(state: State, end: Int, start: Int): State = {
-    var rState = new State(state.content, State.Position(start, 0), state.selection, true )
-    for (i <- start to end){
-      rState = DeleteLine.process(rState)
-    }
-    new State(rState.content, state.position, state.selection, true)
   }
 
   override def equals(x: Any): Boolean ={

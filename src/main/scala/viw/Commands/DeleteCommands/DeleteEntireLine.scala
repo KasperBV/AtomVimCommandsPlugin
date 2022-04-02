@@ -8,10 +8,10 @@ object DeleteEntireLine extends DeleteCommand {
 
   override def process(state: State, eState: EditorState): (State, EditorState) = {
     val lines = state.contentLines
-    (process(state), EditorState(eState.lastCommand, eState.viewMode, eState.bindings, lines(state.position.line)))
+    (process(state), eState.copy(copyBuffer = lines(state.position.line)))
   }
 
   def process(state: State): State =
-    DeleteLine.process(new State(state.content, State.Position(state.position.line, 0), state.selection, true))
+    DeleteLine.process(state.copy(position = state.position.copy(character = 0)))
 
 }

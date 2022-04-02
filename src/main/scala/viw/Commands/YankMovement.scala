@@ -6,37 +6,26 @@ import viw.internals.State
 
 class YankMovement(m : MoveCommand) extends Command {
 
-
   val moveCommand : MoveCommand = m
 
   override def process(state: State, eState: EditorState): (State, EditorState) = {
     val movedState = moveCommand.process(state)
-    val lines = State.properSplit(state.content)
-    val start = if (state.position < movedState.position) state.position else movedState.position
-    val end = if (state.position > movedState.position) state.position else movedState.position
+    if (state.position == movedState.position) (state, eState.copy(copyBuffer =  ""))
+    else if (state.position > movedState.position)
+      yankBetween(eState, state, State.getPositionAfter(state.contentLines, movedState.position).getOrElse(movedState.position),
+        State.getPositionAfter(state.contentLines, state.position).getOrElse(state.position))
+    else yankBetween(eState, state, state.position, movedState.position)
+  }
 
+  def yankBetween(eState: EditorState, state: State, start: State.Position, end: State.Position): (State, EditorState) = {
+    val lines = state.contentLines
     val copyBuffer =
-      if (state.position < movedState.position) {
         if (start.line != end.line) {
           val startLine = lines(start.line).substring(start.character)
           val endLine = lines(end.line).substring(0, end.character)
           startLine + "\n" + lines.slice(start.line + 1, end.line).mkString("\n") + "\n" + endLine
-        }
-        else if (start.character != end.character) lines(start.line).substring(start.character , end.character)
-        else eState.copyBuffer
-      }
-      else {
-        if (start.line != end.line) {
-          val startLine = lines(start.line).substring(start.character+1)
-          val endLine = lines(end.line).substring(0, end.character+1)
-          startLine + "\n" + lines.slice(start.line + 1, end.line).mkString("\n") + "\n" + endLine
-        }
-      else if (start.character != end.character) lines(start.line).substring(start.character+1 , end.character+1)
-      else eState.copyBuffer
-
-      }
+        } else lines(start.line).substring(start.character , end.character)
     (state, EditorState(eState.lastCommand, eState.viewMode, eState.bindings, copyBuffer))
-
   }
 
   override def equals(x: Any): Boolean ={
@@ -45,4 +34,5 @@ class YankMovement(m : MoveCommand) extends Command {
       case _ => false
     }
   }
+
 }

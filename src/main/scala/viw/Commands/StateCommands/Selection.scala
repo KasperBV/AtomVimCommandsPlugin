@@ -4,8 +4,6 @@ package viw.Commands.StateCommands
 import viw.Commands.StateCommands.MoveCommands.MoveCommand
 import viw.internals.State
 
-import scala.math.Ordering.Implicits.infixOrderingOps
-
 class Selection(m: MoveCommand) extends StateCommand{
 
   val moveCommand: MoveCommand = m

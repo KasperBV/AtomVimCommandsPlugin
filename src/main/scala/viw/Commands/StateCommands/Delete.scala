@@ -1,6 +1,5 @@
 package viw.Commands.StateCommands
 
-import viw.Commands.StateCommands.MoveCommands.Left
 import viw.internals.State
 
 object Delete extends StateCommand {

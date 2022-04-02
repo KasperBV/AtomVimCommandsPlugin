@@ -136,6 +136,15 @@ object State {
         case _ => if (line < that.line) -1 else 1
       }
     }
+  }
 
+  object Position {
+    def max(position1: Position, position2: Position): Position = {
+      if (position1 >= position2) position1 else position2
+    }
+
+    def min(position1: Position, position2: Position): Position = {
+      if (position1 <= position2) position1 else position2
+    }
   }
 }
