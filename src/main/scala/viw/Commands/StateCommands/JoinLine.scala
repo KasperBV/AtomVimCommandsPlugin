@@ -5,18 +5,17 @@ import viw.internals.State
 object JoinLine extends StateCommand {
 
   override def process(state: State): State = {
-    val lines = State.properSplit(state.content)
-    val line = lines(state.position.line)
-    if (state.position.line != lines.length - 1) {
-      val newLine = line + " " + lines(state.position.line + 1)
-      val position = State.Position(state.position.line, line.length)
-      var newLines = lines.updated(state.position.line, newLine)
-      newLines = newLines.filter(x => newLines.indexOf(x) != state.position.line + 1)
-      val content = newLines.mkString("\n")
-      new State(content, position, state.selection, true)
-    }
-    else state
+    if (state.isPositionOnLastLine()) state
+    else joinTwoLines(state)
   }
 
+  def joinTwoLines(state: State): State ={
+    val currentLine = state.contentLines(state.position.line)
+    val nextLine = state.contentLines(state.position.line + 1)
+    val newLine = currentLine + " " + nextLine
+    val newLines = state.contentLines.updated(state.position.line, newLine)
+      .filter(_ != nextLine)
+    state.copy(content = newLines.mkString("\n"), position = state.position.copy(character = currentLine.length))
+  }
 
 }
